@@ -824,23 +824,23 @@ async function sendMsg() {
 
   try {
     const res = await fetch('/.netlify/functions/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          message: text,
-          history: history
-        })
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: text,
+        history: history
       })
     });
-
+  
     const data = await res.json();
     removeTyping();
-
+  
     const reply = data.content?.[0]?.text || 'Sorry, I could not get a response. Please try again.';
     history.push({ role: 'assistant', content: reply });
     addMsg('bot', reply);
+  
   } catch (err) {
     removeTyping();
     addMsg('bot', '<span style="color:#f85149">⚠️ Connection error. Please check your network and try again.</span>');
