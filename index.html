@@ -808,28 +808,19 @@ function removeTyping() {
 
 async function sendMsg() {
   const inp = document.getElementById('inp');
-  const message = inp.value.trim();
-  if (!message) return;
+  const msg = inp.value;
+  if (!msg.trim()) return;
 
-  appendUserMessage(message);
+  appendUserMessage(msg); // your function to show user msg
   inp.value = '';
 
-  // show a typing indicator
-  const typingDiv = document.createElement('div');
-  typingDiv.classList.add('typing');
-  typingDiv.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
-  document.getElementById('chat').appendChild(typingDiv);
-  document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+  const res = await fetch('/.netlify/functions/chat', {
+    method: 'POST',
+    body: JSON.stringify({ message: msg })
+  });
 
-  try {
-    // Simulate API call
-    const response = await fakeAIResponse(message); // replace with your real API
-    typingDiv.remove();
-    appendBotMessage(response);
-  } catch (err) {
-    typingDiv.remove();
-    appendBotMessage('<em>Error sending message. Please try again.</em>');
-  }
+  const data = await res.json();
+  appendBotMessage(data.reply); // your function to show bot msg
 }
 
 function quickAsk(msg) {
