@@ -822,6 +822,21 @@ async function sendMsg() {
   const data = await res.json();
   appendBotMessage(data.reply); // your function to show bot msg
 }
+
+ function appendUserMessage(text) {
+  const chat = document.getElementById('chat');
+
+  const msgDiv = document.createElement('div');
+  msgDiv.classList.add('msg', 'user');
+
+  msgDiv.innerHTML = `
+    <div class="avatar user">👤</div>
+    <div class="bubble">${text}</div>
+  `;
+
+  chat.appendChild(msgDiv);
+  chat.scrollTop = chat.scrollHeight;
+} 
 </script>
 </body>
 </html>
