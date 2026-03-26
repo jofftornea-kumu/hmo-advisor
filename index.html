@@ -807,47 +807,56 @@ function removeTyping() {
 }
 
 async function sendMsg() {
-  if (busy) return;
   const inp = document.getElementById('inp');
-  const text = inp.value.trim();
-  if (!text) return;
+  const chat = document.getElementById('chat');
+  const userMsg = inp.value.trim();
+  if (!userMsg) return;
 
+  // Display user message
+  chat.innerHTML += `
+    <div class="msg user">
+      <div class="avatar user">👤</div>
+      <div class="bubble">${userMsg}</div>
+    </div>
+  `;
   inp.value = '';
   inp.style.height = 'auto';
-  document.getElementById('sendBtn').disabled = true;
-  busy = true;
+  chat.scrollTop = chat.scrollHeight;
 
-  addMsg('user', text.replace(/</g, '&lt;').replace(/>/g, '&gt;'));
-  history.push({ role: 'user', content: text });
-
-  showTyping();
+  // Typing indicator
+  const typingDiv = document.createElement('div');
+  typingDiv.className = 'msg bot typing';
+  typingDiv.innerHTML = `<div class="avatar bot">🏥</div><div class="bubble"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+  chat.appendChild(typingDiv);
+  chat.scrollTop = chat.scrollHeight;
 
   try {
-    const res = await fetch('/.netlify/functions/chat', {
+    const res = await fetch('/.netlify/functions/gemini', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        message: text,
-        history: history
-      })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: userMsg })
     });
-  
-    const data = await res.json();
-    removeTyping();
-  
-    const reply = data.content?.[0]?.text || 'Sorry, I could not get a response. Please try again.';
-    history.push({ role: 'assistant', content: reply });
-    addMsg('bot', reply);
-  
-  } catch (err) {
-    removeTyping();
-    addMsg('bot', '<span style="color:#f85149">⚠️ Connection error. Please check your network and try again.</span>');
-  }
 
-  document.getElementById('sendBtn').disabled = false;
-  busy = false;
+    const data = await res.json();
+    typingDiv.remove();
+
+    chat.innerHTML += `
+      <div class="msg bot">
+        <div class="avatar bot">🏥</div>
+        <div class="bubble">${data.reply}</div>
+      </div>
+    `;
+    chat.scrollTop = chat.scrollHeight;
+  } catch (err) {
+    console.error(err);
+    typingDiv.remove();
+    chat.innerHTML += `
+      <div class="msg bot">
+        <div class="avatar bot">🏥</div>
+        <div class="bubble">Oops! Something went wrong.</div>
+      </div>
+    `;
+  }
 }
 </script>
 </body>
