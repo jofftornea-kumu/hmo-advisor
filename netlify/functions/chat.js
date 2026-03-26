@@ -11,7 +11,7 @@ export async function handler(event, context) {
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.KUMU_AI_AGENT}`,
+          'Authorization': `Bearer ${process.env.HF_API_KEY}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ inputs: userMessage })
