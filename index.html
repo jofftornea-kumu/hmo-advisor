@@ -808,22 +808,57 @@ function removeTyping() {
 
 async function sendMsg() {
   const inp = document.getElementById('inp');
-  const msg = inp.value;
-  if (!msg.trim()) return;
+  const message = inp.value.trim();
+  if (!message) return;
 
-  appendUserMessage(msg); // your function to show user msg
+  appendUserMessage(message);
   inp.value = '';
 
-  const res = await fetch('/.netlify/functions/chat', {
-    method: 'POST',
-    body: JSON.stringify({ message: msg })
-  });
+  // show a typing indicator
+  const typingDiv = document.createElement('div');
+  typingDiv.classList.add('typing');
+  typingDiv.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+  document.getElementById('chat').appendChild(typingDiv);
+  document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
 
-  const data = await res.json();
-  appendBotMessage(data.reply); // your function to show bot msg
+  try {
+    // Simulate API call
+    const response = await fakeAIResponse(message); // replace with your real API
+    typingDiv.remove();
+    appendBotMessage(response);
+  } catch (err) {
+    typingDiv.remove();
+    appendBotMessage('<em>Error sending message. Please try again.</em>');
+  }
 }
 
- function appendUserMessage(text) {
+function quickAsk(msg) {
+  document.getElementById('inp').value = msg;
+  sendMsg();
+}
+
+// Example fake response function for testing
+function fakeAIResponse(msg) {
+  return new Promise(resolve => {
+    setTimeout(() => resolve(`You asked: <strong>${msg}</strong>. Here's the response.`), 1000);
+  });
+}
+
+// Optional: handle Enter key in textarea
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMsg();
+  }
+}
+
+// Optional: auto-resize textarea
+function autoResize(textarea) {
+  textarea.style.height = 'auto';
+  textarea.style.height = textarea.scrollHeight + 'px';
+}
+
+function appendUserMessage(text) {
   const chat = document.getElementById('chat');
 
   const msgDiv = document.createElement('div');
@@ -835,8 +870,24 @@ async function sendMsg() {
   `;
 
   chat.appendChild(msgDiv);
+  chat.scrollTop = chat.scrollHeight; // scroll to bottom
+}
+
+function appendBotMessage(html) {
+  const chat = document.getElementById('chat');
+
+  const msgDiv = document.createElement('div');
+  msgDiv.classList.add('msg', 'bot');
+
+  msgDiv.innerHTML = `
+    <div class="avatar bot">🏥</div>
+    <div class="bubble">${html}</div>
+  `;
+
+  chat.appendChild(msgDiv);
   chat.scrollTop = chat.scrollHeight;
-} 
+}
+
 </script>
 </body>
 </html>
