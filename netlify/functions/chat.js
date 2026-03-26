@@ -2,33 +2,41 @@ export async function handler(event) {
   try {
     const { message, history } = JSON.parse(event.body);
 
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01"
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 1000,
-        messages: history.concat([
-          { role: "user", content: message }
-        ])
+        model: "gpt-4.1-mini",
+        input: [
+          {
+            role: "system",
+            content: process.env.SYSTEM_PROMPT
+          },
+          ...history,
+          {
+            role: "user",
+            content: message
+          }
+        ]
       })
     });
 
-    const data = await res.json();
+    const data = await response.json();
 
     return {
       statusCode: 200,
-      body: JSON.stringify(data)
+      body: JSON.stringify({
+        content: data.output
+      })
     };
 
   } catch (err) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: err.message })
+      body: JSON.stringify({ error: "Server error" })
     };
   }
 }
