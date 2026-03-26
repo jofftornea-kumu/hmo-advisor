@@ -1,26 +1,25 @@
-export async function handler(event) {
-  try {
-    const { message, history } = JSON.parse(event.body);
+// /netlify/functions/chatbot.js
+import fetch from 'node-fetch';
 
-    const response = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
+export async function handler(event, context) {
+  try {
+    const body = JSON.parse(event.body || '{}');
+    const userPrompt = body.prompt;
+
+    if (!userPrompt) {
+      return { statusCode: 400, body: JSON.stringify({ error: 'No prompt provided.' }) };
+    }
+
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta2/models/text-bison-001:generate', {
+      method: 'POST',
       headers: {
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json"
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.GEMINI_API_KEY}` // we'll set this in Netlify
       },
       body: JSON.stringify({
-        model: "gpt-4.1-mini",
-        input: [
-          {
-            role: "system",
-            content: process.env.SYSTEM_PROMPT
-          },
-          ...history,
-          {
-            role: "user",
-            content: message
-          }
-        ]
+        prompt: { text: userPrompt },
+        temperature: 0.7,
+        maxOutputTokens: 500
       })
     });
 
@@ -28,15 +27,13 @@ export async function handler(event) {
 
     return {
       statusCode: 200,
-      body: JSON.stringify({
-        content: data.output
-      })
+      body: JSON.stringify({ answer: data.candidates?.[0]?.content || "No response from Gemini." })
     };
 
   } catch (err) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: "Server error" })
+      body: JSON.stringify({ error: err.message })
     };
   }
 }
